@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - APP_SECRET=${APP_SECRET:-change-me-in-prod}
+      - DB_PATH=/data/app.db
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*}
+      - PAIR_TTL_SECONDS=${PAIR_TTL_SECONDS:-300}
+      - SESSION_TTL_MINUTES=${SESSION_TTL_MINUTES:-30}
+      - DEVICE_TOKEN_TTL_HOURS=${DEVICE_TOKEN_TTL_HOURS:-8760}
+    volumes:
+      - app_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/healthz', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  app_data:

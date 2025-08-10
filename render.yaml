@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: esp32-display-api
+    env: python
+    buildCommand: "pip install -r api/requirements.txt"
+    startCommand: "cd api && python -m uvicorn main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DB_PATH
+        value: /opt/render/project/src/data/app.db
+      - key: APP_SECRET
+        generateValue: true
+      - key: ALLOWED_ORIGINS
+        value: https://esp32-display-api.onrender.com
+    disk:
+      name: data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1

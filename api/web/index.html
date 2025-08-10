@@ -1,0 +1,125 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ESP32 Display – Pair & Configure</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 2rem; }
+    .card { max-width: 520px; padding: 1rem 1.25rem; border: 1px solid #ddd; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    label { display:block; margin: 0.75rem 0 0.25rem; font-weight: 600; }
+    input, select, textarea, button { width: 100%; padding: 0.6rem; border-radius: 10px; border: 1px solid #ccc; box-sizing: border-box; }
+    button { cursor:pointer; font-weight: 600; }
+    .row { display:flex; gap: 8px; }
+    .row > * { flex: 1; }
+    .muted { color: #666; font-size: 0.9rem; }
+    .ok { color: #056d3a; }
+    .err { color: #9b2226; }
+    .hidden { display:none; }
+    .preview { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background:#111; color:#0f0; padding: 12px; border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Pair your ESP32</h2>
+    <p class="muted">Look at your device screen. Enter the 6‑digit code it shows.</p>
+    <label>Pairing code</label>
+    <div class="row">
+      <input id="code" placeholder="e.g., 482913" maxlength="6" />
+      <button id="btnClaim">Claim</button>
+    </div>
+    <div id="claimMsg"></div>
+    <hr>
+    <div id="config" class="hidden">
+      <h3>Choose what to display</h3>
+      <label>Module</label>
+      <select id="module">
+        <option value="text">Text</option>
+        <option value="btc_price">BTC price</option>
+        <option value="weather">Weather</option>
+      </select>
+      <div id="params"></div>
+      <button id="btnSave" style="margin-top:10px">Save</button>
+      <div id="saveMsg"></div>
+      <h4>Preview</h4>
+      <pre class="preview" id="preview"></pre>
+    </div>
+  </div>
+
+<script>
+let deviceId = null;
+
+function el(id){ return document.getElementById(id); }
+function show(id){ el(id).classList.remove('hidden'); }
+function hide(id){ el(id).classList.add('hidden'); }
+
+el('btnClaim').addEventListener('click', async () => {
+  const code = el('code').value.trim();
+  el('claimMsg').textContent = '';
+  try {
+    const res = await fetch('/pair/claim', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ pair_code: code })
+    });
+    if(!res.ok){ throw new Error((await res.json()).detail || 'Failed'); }
+    const data = await res.json();
+    deviceId = data.device_id;
+    el('claimMsg').innerHTML = '<span class="ok">Device linked. Configure below.</span>';
+    show('config');
+    renderParams();
+  } catch(e){
+    el('claimMsg').innerHTML = '<span class="err">'+e.message+'</span>';
+  }
+});
+
+el('module').addEventListener('change', renderParams);
+
+function renderParams(){
+  const m = el('module').value;
+  let html = '';
+  if(m === 'text'){
+    html = `
+      <label>Message</label>
+      <textarea id="p_message" rows="3" placeholder="Hello Fiona!"></textarea>
+      <label>Max chars per line</label>
+      <input id="p_max" type="number" value="16" />
+    `;
+    el('preview').textContent = "Hello Fiona!\n(max 16 chars per line)";
+  } else if(m === 'btc_price'){
+    html = `<p class="muted">No settings. Device will show BTC price + 24h change.</p>`;
+    el('preview').textContent = "BTC $63,420\n24h +0.8%";
+  } else if(m === 'weather'){
+    html = `
+      <label>City (e.g., Portland,US)</label>
+      <input id="p_city" placeholder="Portland,US" />
+    `;
+    el('preview').textContent = "Portland,US\n20°C  Wind 9";
+  }
+  el('params').innerHTML = html;
+}
+
+el('btnSave').addEventListener('click', async () => {
+  const m = el('module').value;
+  let params = {};
+  if(m==='text'){
+    params = { message: el('p_message').value || 'Hello!', max_chars: parseInt(el('p_max').value || '16') };
+  } else if(m==='weather'){
+    params = { city: el('p_city').value || 'Portland,US' };
+  }
+  el('saveMsg').textContent='';
+  try {
+    const res = await fetch(`/device/${deviceId}/module`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ type: m, params })
+    });
+    if(!res.ok){ throw new Error((await res.json()).detail || 'Failed'); }
+    el('saveMsg').innerHTML = '<span class="ok">Saved. Device will update shortly.</span>';
+  } catch(e){
+    el('saveMsg').innerHTML = '<span class="err">'+e.message+'</span>';
+  }
+});
+</script>
+</body>
+</html>

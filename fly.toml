@@ -1,0 +1,29 @@
+app = "esp32-display"
+primary_region = "sea"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/healthz"
+
+[env]
+  ENVIRONMENT = "production"
+  DB_PATH = "/data/app.db"
+  PORT = "8000"
+
+[[mounts]]
+  source = "esp32_display_data"
+  destination = "/data"

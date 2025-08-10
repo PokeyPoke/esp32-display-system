@@ -2,6 +2,8 @@ services:
   - type: web
     name: esp32-display-api
     env: python
+    region: oregon
+    plan: free
     buildCommand: "pip install -r api/requirements.txt"
     startCommand: "cd api && python -m uvicorn main:app --host 0.0.0.0 --port $PORT"
     envVars:
@@ -12,7 +14,7 @@ services:
       - key: APP_SECRET
         generateValue: true
       - key: ALLOWED_ORIGINS
-        value: https://esp32-display-api.onrender.com
+        value: "*"
     disk:
       name: data
       mountPath: /opt/render/project/src/data

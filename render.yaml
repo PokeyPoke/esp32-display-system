@@ -10,12 +10,8 @@ services:
       - key: ENVIRONMENT
         value: production
       - key: DB_PATH
-        value: /opt/render/project/src/data/app.db
+        value: /tmp/app.db
       - key: APP_SECRET
         generateValue: true
       - key: ALLOWED_ORIGINS
         value: "*"
-    disk:
-      name: data
-      mountPath: /opt/render/project/src/data
-      sizeGB: 1

@@ -87,7 +87,9 @@ void screenLines(const String lines[], int count) {
 bool postJson(const String& url, const String& payload, String& out) {
   Serial.println("POST " + url);
   
+  // ESP32-C3 specific SSL configuration
   secureClient.setInsecure();
+  secureClient.setTimeout(15);
   
   if (!http.begin(secureClient, url)) {
     logError("HTTP begin failed");
@@ -96,8 +98,10 @@ bool postJson(const String& url, const String& payload, String& out) {
   
   http.setTimeout(HTTP_TIMEOUT_MS);
   http.addHeader("Content-Type", "application/json");
-  http.addHeader("User-Agent", "ESP32-Display/0.2.0");
+  http.addHeader("User-Agent", "ESP32-C3-Display/0.2.0");
+  http.addHeader("Connection", "close");
   
+  Serial.println("Posting payload: " + payload.substring(0, 100));
   int code = http.POST(payload);
   Serial.printf("HTTP Response: %d\n", code);
   
@@ -105,15 +109,20 @@ bool postJson(const String& url, const String& payload, String& out) {
     out = http.getString();
     Serial.println("Response: " + out.substring(0, 200));
   } else {
+    Serial.printf("HTTP error details: %s\n", http.errorToString(code).c_str());
     logError("HTTP POST failed: " + String(code));
   }
   
   http.end();
+  secureClient.stop();
+  
   return code >= 200 && code < 300;
 }
 
 bool getUrl(const String& url, String& out) {
+  // ESP32-C3 specific SSL configuration
   secureClient.setInsecure();
+  secureClient.setTimeout(15);
   
   if (!http.begin(secureClient, url)) {
     logError("HTTP begin failed");
@@ -121,17 +130,21 @@ bool getUrl(const String& url, String& out) {
   }
   
   http.setTimeout(HTTP_TIMEOUT_MS);
-  http.addHeader("User-Agent", "ESP32-Display/0.2.0");
+  http.addHeader("User-Agent", "ESP32-C3-Display/0.2.0");
+  http.addHeader("Connection", "close");
   
   int code = http.GET();
   
   if (code > 0) {
     out = http.getString();
   } else {
+    Serial.printf("HTTP GET error details: %s\n", http.errorToString(code).c_str());
     logError("HTTP GET failed: " + String(code));
   }
   
   http.end();
+  secureClient.stop();
+  
   return code >= 200 && code < 300;
 }
 
@@ -305,6 +318,17 @@ void setup() {
   
   drawStatus("WiFi connected");
   delay(1000);
+  
+  // Test basic connectivity
+  drawStatus("Testing connection");
+  Serial.println("Testing DNS resolution...");
+  IPAddress serverIP;
+  if (WiFi.hostByName("esp32-display-api.onrender.com", serverIP)) {
+    Serial.println("DNS lookup successful: " + serverIP.toString());
+  } else {
+    Serial.println("DNS lookup failed!");
+  }
+  delay(2000);
   
   if (deviceToken.length() == 0) {
     if (!pairWithServer()) {

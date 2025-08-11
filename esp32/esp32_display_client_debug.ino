@@ -55,6 +55,13 @@ void setup() {
   // WiFi config portal with extended timeout
   WiFiManager wm;
   
+  // FORCE RESET - Clear all stored WiFi credentials
+  Serial.println("Clearing stored WiFi credentials...");
+  showStatus("Clearing WiFi");
+  wm.resetSettings();
+  WiFi.disconnect(true, true); // Disconnect and clear credentials
+  delay(2000);
+  
   // Debug settings
   wm.setDebugOutput(true);
   wm.setTimeout(WIFI_TIMEOUT_SEC);

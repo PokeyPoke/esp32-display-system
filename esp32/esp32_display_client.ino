@@ -26,7 +26,7 @@
 #include <esp_task_wdt.h>
 
 // ---------- CONFIG ----------
-const char* SERVER_BASE = "https://YOUR_DOMAIN_OR_IP"; // e.g., "https://example.com"
+const char* SERVER_BASE = "https://esp32-display-api.onrender.com";
 const int POLL_FALLBACK_SEC = 10;
 const int MAX_RETRY_ATTEMPTS = 3;
 const int WIFI_TIMEOUT_SEC = 120;

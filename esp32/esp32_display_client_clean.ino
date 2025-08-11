@@ -15,7 +15,7 @@
 #include <Preferences.h>
 
 // ---------- CONFIG ----------
-const char* SERVER_BASE = "https://YOUR_RENDER_URL.onrender.com"; // Update with your Render URL
+const char* SERVER_BASE = "https://esp32-display-api.onrender.com";
 const int POLL_FALLBACK_SEC = 10;
 const int MAX_RETRY_ATTEMPTS = 3;
 const int WIFI_TIMEOUT_SEC = 120;

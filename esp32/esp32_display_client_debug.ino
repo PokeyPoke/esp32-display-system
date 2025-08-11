@@ -11,7 +11,7 @@
 #include <Wire.h>
 
 // ---------- CONFIG ----------
-const char* SERVER_BASE = "https://your-render-url-here.onrender.com"; // Update this later
+const char* SERVER_BASE = "https://esp32-display-api.onrender.com";
 const int WIFI_TIMEOUT_SEC = 180; // 3 minutes
 
 // Choose your display (one of these)

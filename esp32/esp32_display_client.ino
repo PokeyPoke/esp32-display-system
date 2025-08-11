@@ -300,8 +300,24 @@ void setup() {
   Serial.begin(115200);
   Serial.println("\n\n=== ESP32 Display Client v0.2.0 ===");
   
-  // Initialize watchdog
-  esp_task_wdt_init(30, true);
+  // Initialize watchdog (compatible with both old and new framework versions)
+  #ifdef ESP_IDF_VERSION_MAJOR
+    #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+      // New API for ESP-IDF 5.x
+      esp_task_wdt_config_t wdt_config = {
+        .timeout_ms = 30000,
+        .idle_core_mask = (1 << portNUM_PROCESSORS) - 1,
+        .trigger_panic = true
+      };
+      esp_task_wdt_init(&wdt_config);
+    #else
+      // Old API for ESP-IDF 4.x
+      esp_task_wdt_init(30, true);
+    #endif
+  #else
+    // Fallback for very old versions
+    esp_task_wdt_init(30, true);
+  #endif
   esp_task_wdt_add(NULL);
   
   // Initialize preferences

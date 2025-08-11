@@ -99,7 +99,7 @@ def pair_start(inp: PairStartIn):
 
 @app.get("/healthz")
 def healthz():
-    return {"ok": True, "version": "minimal"}
+    return {"ok": True, "version": "minimal-v2", "timestamp": str(now_utc())}
 
 @app.get("/")
 def root():
